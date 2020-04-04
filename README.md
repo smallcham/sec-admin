@@ -25,34 +25,53 @@ SEC共分为三个项目
 ###一、  一键部署
 一键部署已经将所有服务以及启动脚本打包成docker镜像， 可以直接运行，数据库以及相关公用服务直接打包在容器内部，不支持分布式节点扩展，可作为体验测试，**不建议直接作为生产环境使用**。
 1. 首先需要安装Docker服务，Ubuntu可使用以下指令直接安装（**已经安装Docker服务并启动的直接调到第 3 步**）
+
 Ubuntu: ```sudo apt-get -y install docker.io```
+
 CentOS: ```sudo yum -y install docker.io```
 2. 启动Docker服务（**已经安装Docker服务并启动的直接调到第 3 步**）
+
 ```sudo service docker start```
+
 3. 启动SEC服务(**指令中8793是后台访问端口， 可根据需求修改为其他端口，NODE_COUNT 为执行节点启动的进程数，默认为3**)
+
 ```docker run -d -p 8793:80 --name sec --env NODE_COUNT=3 sec-all-in && docker logs -f sec --tail 10```
+
 4. 服务启动后初始用户为：root， 初始密码将会打印在控制台，可在登录后修改。
 
 ###二、使用容器分布式部署（推荐）
 1. 首先需要安装Docker服务，Ubuntu可使用以下指令直接安装（**已经安装Docker服务并启动的直接调到第 3 步**）
+
 Ubuntu: ```sudo apt-get -y install docker.io```
+
 CentOS: ```sudo yum -y install docker.io```
+
 2. 启动Docker服务（**已经安装Docker服务并启动的直接调到第 3 步**）
+
 ```sudo service docker start```
+
 3. 使用容器启动并初始化MySQL数据库
+
 ```docker run --name sec-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=secpassword -d mysql:5.7```
+
 ```wget https://raw.githubusercontent.com/smallcham/sec-admin/master/pack/create_db.sql```
+
 等待半分钟，mysql启动完毕后执行
+
 ```docker exec -i sec-mysql sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < /你下载的目录/create_db.sql```
 
 > 如果你要使用自己现有的数据库可以直接将[create_db.sql](https://github.com/smallcham/sec-admin/blob/master/pack/create_db.sql)中的SQL执行进行初始化
 
 4. 使用容器启动Redis
+
 ```docker run --name sec-redis -d redis```
+
 > 你也可以使用自己现有的Redis
 
 5. 使用容器启动SEC控制系统
+
 ```docker run```
+
 6. 登录SEC管理系统，使用节点添加功能生成并拷贝到终端执行节点安装指令，节点支持分布式，只要保证部署服务器与控制系统以及Redis之间互通即可，当然也可以直接在同一台服务器部署
 
 ###三、不使用容器本地部署（以下示例基于Ubuntu）
