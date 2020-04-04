@@ -4,13 +4,13 @@ if [ "$UPDATE" == "yes" ];then
   git fetch --all
   git reset --hard origin/master
   git pull
-  cd /var/www/html/assets-sec-web/
+  cd /var/www/html/sec-admin-web/
   git fetch --all
   git reset --hard origin/master
   git pull
 fi
 rm -rf /var/www/html/dist
-ln -s /var/www/html/assets-sec-web/dist /var/www/html/dist
+ln -s /var/www/html/sec-admin-web/dist /var/www/html/dist
 mv /var/www/html/sec-admin/static/plugin/_usr/* /var/www/html/sec-admin/static/plugin/usr/
 cd /var/www/html/sec-admin/
 pip3 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
