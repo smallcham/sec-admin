@@ -47,7 +47,7 @@ sudo service docker start
 3. 启动SEC服务(**指令中8793是后台访问端口， 可根据需求修改为其他端口，NODE_COUNT 为执行节点启动的进程数，默认为3**)
 
 ```
-docker run -d -p 8793:80 --name sec --env NODE_COUNT=3 sec-all-in && docker logs -f sec --tail 10
+docker run -d -p 8793:80 --name sec --env NODE_COUNT=3 smallcham/sec:all-in-0.1 && docker logs -f sec --tail 10
 ```
 
 4. 服务启动后初始用户为：root， 初始密码将会打印在控制台，可在登录后修改。
