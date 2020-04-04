@@ -1,0 +1,23 @@
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+
+        root /var/www/html;
+
+        index index.html index.htm;
+
+        server_name _;
+
+        location / {
+		root /var/www/html/dist;
+		try_files $uri $uri/ 404;
+        }
+
+        location /api/ {
+                proxy_pass http://localhost:8000/;
+        }
+
+        location /static/plugin/usr/ {
+                proxy_pass http://localhost:8000;
+        }
+}

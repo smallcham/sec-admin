@@ -1,0 +1,55 @@
+#!/bin/bash
+cd /var/www/html/sec-admin/
+git fetch --all
+git reset --hard origin/master
+git pull
+cd /var/www/html/xn-scannode/
+git fetch --all
+git reset --hard origin/master
+git pull
+cd /var/www/html/assets-sec-web/
+git fetch --all
+git reset --hard origin/master
+git pull
+rm -rf /var/www/html/dist
+ln -s /var/www/html/assets-sec-web/dist /var/www/html/dist
+mv /var/www/html/sec-admin/static/plugin/_usr/* /var/www/html/sec-admin/static/plugin/usr/
+echo -e "\n\n\033[33m waiting redis start... \033[0m\n\n"
+nohup redis-server &
+
+echo -e "\n\n\033[33m waiting mysql start... \033[0m\n\n"
+service mysql restart
+if [ -e /db_check_do_not_delete ]; then
+	echo "skip db init."
+else
+  echo -e "\n\n\033[33m waiting db init... \033[0m\n\n"
+	mysql -uroot < /var/www/html/sec-admin/pack/create_db.sql
+	touch /db_check_do_not_delete
+fi
+cd /var/www/html/xn-scannode/
+pip3 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
+echo -e "\n\n\033[33m starting task node... \033[0m\n\n"
+for i in $(seq 1 $NODE_COUNT);
+do
+  nohup python3 -u scan.py &
+done
+cd /var/www/html/sec-admin/
+pip3 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
+export ENV=ALL_IN
+nohup gunicorn -w 10 app:flask_app >> /sec.log &
+echo -e "\n\n\033[33m loading service... \033[0m\n\n"
+sleep 3
+/usr/sbin/nginx
+if [ -e init_pwd.sh ]; then
+  touch init_pwd.sh
+else
+  touch init_pwd.sh
+  echo "#!/bin/sh" > init_pwd.sh
+  echo -e "\n\n\033[33m Waiting Init System Config... \033[0m\n\n"
+  curl -X POST 'http://localhost/api/system/init' >> init_pwd.sh
+  sleep 3
+  sh ./init_pwd.sh
+fi
+echo -e "\033[32m Service Started . \033[0m"
+cd /var/www/html/sec-admin/
+python3 -u task.py
