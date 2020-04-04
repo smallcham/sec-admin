@@ -1,19 +1,21 @@
 #!/bin/bash
-cd /var/www/html/sec-admin/
-git fetch --all
-git reset --hard origin/master
-git pull
-cd /var/www/html/xn-scannode/
-git fetch --all
-git reset --hard origin/master
-git pull
-cd /var/www/html/assets-sec-web/
-git fetch --all
-git reset --hard origin/master
-git pull
-rm -rf /var/www/html/dist
-ln -s /var/www/html/assets-sec-web/dist /var/www/html/dist
-mv /var/www/html/sec-admin/static/plugin/_usr/* /var/www/html/sec-admin/static/plugin/usr/
+if [ "$UPDATE" == "yes" ];then
+  cd /var/www/html/sec-admin/
+  git fetch --all
+  git reset --hard origin/master
+  git pull
+  cd /var/www/html/xn-scannode/
+  git fetch --all
+  git reset --hard origin/master
+  git pull
+  cd /var/www/html/assets-sec-web/
+  git fetch --all
+  git reset --hard origin/master
+  git pull
+  rm -rf /var/www/html/dist
+  ln -s /var/www/html/assets-sec-web/dist /var/www/html/dist
+  mv /var/www/html/sec-admin/static/plugin/_usr/* /var/www/html/sec-admin/static/plugin/usr/
+fi
 echo -e "\n\n\033[33m waiting redis start... \033[0m\n\n"
 nohup redis-server &
 
