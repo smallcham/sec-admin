@@ -12,10 +12,10 @@ if [ "$UPDATE" == "yes" ];then
   git fetch --all
   git reset --hard origin/master
   git pull
-  rm -rf /var/www/html/dist
-  ln -s /var/www/html/assets-sec-web/dist /var/www/html/dist
-  mv /var/www/html/sec-admin/static/plugin/_usr/* /var/www/html/sec-admin/static/plugin/usr/
 fi
+rm -rf /var/www/html/dist
+ln -s /var/www/html/assets-sec-web/dist /var/www/html/dist
+mv /var/www/html/sec-admin/static/plugin/_usr/* /var/www/html/sec-admin/static/plugin/usr/
 echo -e "\n\n\033[33m waiting redis start... \033[0m\n\n"
 nohup redis-server &
 

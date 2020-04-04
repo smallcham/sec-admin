@@ -13,7 +13,7 @@ RUN pip3 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 WORKDIR /var/www/html/sec-admin/
 RUN pip3 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
-LABEL version=0.7
+LABEL version=0.8
 ENV LANG=C.UTF-8
 ENV MQ_SCAN_ENV=prod_scan_queue:3
 ENV MQ_HEART_ENV=prod_heart_exchange:fanout
