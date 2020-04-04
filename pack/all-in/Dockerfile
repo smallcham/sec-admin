@@ -6,7 +6,7 @@ RUN apt-get -y update && apt-get -y install git python3 python3-pip curl nginx n
 WORKDIR /var/www/html/
 LABEL version=0.8
 RUN git clone https://github.com/smallcham/sec-admin.git && \
-	git clone https://github.com/smallcham/sec-admin-web.git
+	git clone https://github.com/smallcham/sec-admin-web.git && \
 	git clone https://e.coding.net/davytitan/xn-scannode.git
 WORKDIR /var/www/html/xn-scannode/
 RUN pip3 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
