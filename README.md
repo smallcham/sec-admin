@@ -1,12 +1,12 @@
 #SEC-资产安全扫描（弱口令、系统漏洞、WEB漏洞扫描）
 ---
  **SEC (SEC Is Elastic Controller)** 可用于企业对服务器资源安全进行扫描排查，可控性强、可停止运行中的扫描任务、支持分布式多节点部署，更快的扫描进度 + 节点执行信息动态反馈，快速定位漏洞。
- 
+
  作者开源此应用的目的是为了方便企业管理自身的服务器资产，提高安全性，以避免不必要的损失；同时也能与大家一起探讨学习，请使用者不要用于非法目的，自觉遵守 [**《中华人民共和国网络安全法》**](http://www.cac.gov.cn/2016-11/07/c_1119867116.htm) ，一起为祖国的网络安全做贡献。
 
 ---
 ##系统组成介绍
-SEC共分为三个项目 
+SEC共分为三个项目
 * [前端WEB项目](https://github.com/smallcham/sec-admin-web.git)
 * [中央控制系统](https://github.com/smallcham/sec-admin.git)
 * [任务执行系统](https://github.com/davytitan/sec-scannode.git)
@@ -40,9 +40,12 @@ CentOS: ```sudo yum -y install docker.io```
 2. 启动Docker服务（**已经安装Docker服务并启动的直接调到第 3 步**）
 ```sudo service docker start```
 3. 使用容器启动并初始化MySQL数据库
-```docker run --name sec-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=secpassword -d mysql:5.7 && docker exec -i sec-mysql sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < curl http://github.com/smallcham/sec-admin/pack/create_db.sql```
+```docker run --name sec-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=secpassword -d mysql:5.7```
+```wget https://raw.githubusercontent.com/smallcham/sec-admin/master/pack/create_db.sql```
+等待半分钟，mysql启动完毕后执行
+```docker exec -i sec-mysql sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < /你下载的目录/create_db.sql```
 
-> 如果你要使用自己现有的数据库可以直接将[create_db.sql](http://github.com/smallcham/sec-admin/pack/create_db.sql)中的SQL执行进行初始化
+> 如果你要使用自己现有的数据库可以直接将[create_db.sql](https://github.com/smallcham/sec-admin/blob/master/pack/create_db.sql)中的SQL执行进行初始化
 
 4. 使用容器启动Redis
 ```docker run --name sec-redis -d redis```
