@@ -5,6 +5,12 @@
  作者开源此应用的目的是为了方便企业管理自身的服务器资产，提高安全性，以避免不必要的损失；同时也能与大家一起探讨学习，请使用者不要用于非法目的，自觉遵守 [**《中华人民共和国网络安全法》**](http://www.cac.gov.cn/2016-11/07/c_1119867116.htm) ，一起为祖国的网络安全做贡献。
 
 ----------
+
+## 流程演示视频
+
+[![](https://smallcham.github.io/static/img/sec-demo.png)](https://smallcham.github.io/static/video/sec-demo.mp4)
+
+----------
 ## 系统组成介绍
 
 SEC共分为三个项目
@@ -93,7 +99,7 @@ docker exec -i sec-mysql sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < /�
 4. 使用容器启动Redis
 
 ```
-docker run --name sec-redis -d redis
+docker run -p 6379:6379 --name sec-redis -d redis
 ```
 
 > 你也可以使用自己现有的Redis
@@ -111,7 +117,8 @@ docker run -d -p 8793:80 --name sec --env HOST=http://192.168.0.107:8793 --env D
 ```
 
 
-6. 登录SEC管理系统，使用节点添加功能生成并拷贝到终端执行节点安装指令，节点支持分布式，只要保证部署服务器与控制系统以及Redis之间互通即可，当然也可以直接在同一台服务器部署
+6. 登录SEC管理系统
+使用节点添加功能生成并拷贝到终端执行节点安装指令，节点支持分布式，只要保证部署服务器与控制系统以及Redis之间互通即可，当然也可以直接在同一台服务器部署，详细操作请查看[演示视频](https://smallcham.github.io/static/video/sec-demo.mp4)
 
 ### 三、不使用容器本地部署（以下示例基于Ubuntu）
 
