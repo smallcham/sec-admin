@@ -1,7 +1,7 @@
 FROM ubuntu:18.04
 COPY ./Shanghai /etc/localtime 
 RUN echo "Asia/Shanghai" > /etc/timezone
-RUN apt-get -y update && apt-get -y install git python3 python3-pip curl nginx nmap
+RUN apt-get -y update && apt-get -y install git python3 python3-pip curl nginx nmap libmysqlclient-dev
 
 WORKDIR /var/www/html/
 LABEL version=0.3
