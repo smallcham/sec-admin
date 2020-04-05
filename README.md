@@ -101,8 +101,15 @@ docker run --name sec-redis -d redis
 5. 使用容器启动SEC控制系统
 
 ```
-docker run
+docker run -d -p 启动端口:80 --name sec --env HOST=http://部署机器的IP:启动端口（启动后用这个URL在浏览器访问） --env DB_URL=MySQL用户名:MySQL密码@MySQLIP:数据库端口(一默认是3306)/sec --RDS_URL=Redis库号(默认写0):Redis密码(没有密码可以不写)@RedisIP:Redis端口(默认是6379) -v ~/sec-script:/var/www/html/sec-admin/static/plugin/usr smallcham/sec:core-0.1 && docker logs -f sec --tail 10
 ```
+
+> 例如
+
+```
+docker run -d -p 8793:80 --name sec --env HOST=http://192.168.0.107:8793 --env DB_URL=root:abcd1234@192.168.0.107:3306/sec --env RDS_URL=0:abcd1234@192.168.0.107:6379 -v ~/sec-script:/var/www/html/sec-admin/static/plugin/usr smallcham/sec:core-0.1 && docker logs -f sec --tail 10
+```
+
 
 6. 登录SEC管理系统，使用节点添加功能生成并拷贝到终端执行节点安装指令，节点支持分布式，只要保证部署服务器与控制系统以及Redis之间互通即可，当然也可以直接在同一台服务器部署
 
