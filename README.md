@@ -16,7 +16,7 @@
 SEC共分为三个项目
 * [前端WEB项目](https://github.com/smallcham/sec-admin-web.git)
 * [中央控制系统](https://github.com/smallcham/sec-admin.git)
-* [任务执行系统](https://github.com/davytitan/sec-scannode.git)
+* [任务执行系统](https://github.com/wanzywang/sec-scannode.git)
 
 > **前端WEB系统**
 使用动静分离的方式部署， WEB页面部分使用 Vue + ElementUI 编写，所有的UI都在这个项目中。

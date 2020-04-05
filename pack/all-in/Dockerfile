@@ -4,10 +4,10 @@ RUN echo "Asia/Shanghai" > /etc/timezone
 RUN apt-get -y update && apt-get -y install git python3 python3-pip curl nginx nmap redis-server mysql-server libmysqlclient-dev
 
 WORKDIR /var/www/html/
-LABEL version=1.0
+LABEL version=1.6
 RUN git clone https://github.com/smallcham/sec-admin.git && \
 	git clone https://github.com/smallcham/sec-admin-web.git && \
-	git clone https://e.coding.net/davytitan/xn-scannode.git
+	git clone https://github.com/wanzywang/sec-scannode.git
 WORKDIR /var/www/html/xn-scannode/
 RUN pip3 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 WORKDIR /var/www/html/sec-admin/
