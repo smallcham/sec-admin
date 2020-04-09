@@ -1,6 +1,6 @@
 create schema if not exists `sec` collate utf8_general_ci;
 use `sec`;
-create table `asset`
+create table if not exists `asset`
 (
     `id`          bigint auto_increment primary key,
     `ip`          varchar(128) null,
