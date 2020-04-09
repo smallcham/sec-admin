@@ -49,4 +49,5 @@ else
 fi
 echo -e "\033[32m Service Started . \033[0m"
 cd /var/www/html/sec-admin/
-python3 -u task.py
+nohup python3 -u task.py &
+python3 -u subscan.py
