@@ -2,8 +2,7 @@ create schema if not exists sec collate utf8_general_ci;
 use sec;
 create table if not exists asset
 (
-    id          bigint auto_increment
-        primary key,
+    id          bigint auto_increment primary key,
     ip          varchar(128) null,
     tags        varchar(256) null,
     region      varchar(64)  null,
@@ -15,8 +14,7 @@ create table if not exists asset
 
 create table if not exists dict
 (
-    id          bigint auto_increment
-        primary key,
+    id          bigint auto_increment primary key,
     dict_key    varchar(256) null,
     dict_value  longtext     null,
     remark      varchar(256) null,
@@ -26,8 +24,7 @@ create table if not exists dict
 
 create table if not exists plugin
 (
-    id          bigint auto_increment
-        primary key,
+    id          bigint auto_increment primary key,
     title       varchar(256)     null,
     remark      longtext         null,
     publisher   varchar(128)     null,
@@ -40,8 +37,7 @@ create table if not exists plugin
 
 create table if not exists task
 (
-    id           bigint auto_increment
-        primary key,
+    id           bigint auto_increment primary key,
     task_name    varchar(256) null,
     script       varchar(265) null,
     script_name  varchar(256) null,
@@ -58,8 +54,7 @@ create table if not exists task
 
 create table if not exists user
 (
-    id          bigint auto_increment
-        primary key,
+    id          bigint auto_increment primary key,
     user_name   varchar(64)  null,
     pass_word   varchar(128) null,
     salt        varchar(128) null,
