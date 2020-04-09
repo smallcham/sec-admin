@@ -12,9 +12,9 @@ create table if not exists `asset`
     `modify_time` datetime     null
 );
 
-create table if not exists `dict``
+create table if not exists `dict`
 (
-    `id``          bigint auto_increment primary key,
+    `id`          bigint auto_increment primary key,
     `dict_key`    varchar(256) null,
     `dict_value`  longtext     null,
     `remark`      varchar(256) null,
