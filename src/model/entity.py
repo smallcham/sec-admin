@@ -12,6 +12,8 @@ class Asset(db.Model):
     tags = db.Column(db.String())
     ports = db.Column(db.String())
     os = db.Column(db.String())
+    remark = db.Column(db.String())
+    dns = db.Column(db.String())
     create_time = db.Column(db.DateTime())
     modify_time = db.Column(db.DateTime())
 
@@ -23,6 +25,8 @@ class Asset(db.Model):
             'tags': None if self.tags is None else eval(self.tags),
             'ports': None if self.ports is None else eval(self.ports),
             'os': None if self.os is None else eval(self.os),
+            'remark': None if self.remark is None else eval(self.remark),
+            'dns': None if self.dns is None else eval(self.dns),
             'create_time': self.create_time,
             'modify_time': self.modify_time
         }

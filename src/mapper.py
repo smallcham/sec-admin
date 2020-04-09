@@ -1,18 +1,22 @@
 from src.model.entity import *
-from src.model.enum import Env, RedisConfig, TaskState, TaskCron, HandleState, UserState, UserType
+from src.model.enum import Env, RedisConfig, TaskState, TaskCron, HandleState, UserState, UserType, CdnDefault
 from datetime import datetime
 import multiprocessing
 from sqlalchemy import or_, func
 from redis import Redis
-from src.util import mq
+from dns import resolver
 from threading import Lock
+import sublist3r
+import requests
 import time
 import json
+import re
 
 rds = Redis(host=RedisConfig.host, port=RedisConfig.port, db=RedisConfig.db, password=RedisConfig.password)
 
 lock = multiprocessing.Manager().Lock()
 task_lock = Lock()
+del_lock = Lock()
 
 host_map = {}
 
@@ -23,8 +27,27 @@ def count_asset():
     return Asset.query.filter().count()
 
 
-def list_asset(page_size, page, ip, region, port, tags):
+def list_asset(page_size, page, ip, region, port, tags, cdn):
     build = Asset.query.order_by(Asset.modify_time.desc())
+    if ip is not None and ip != '':
+        build = build.filter(Asset.ip.ilike('%' + ip + '%'))
+    if region is not None and region != '':
+        build = build.filter_by(region=region)
+    if tags is not None and tags != '':
+        build = build.filter(Asset.tags.ilike('%' + tags + '%'))
+    if cdn is not None and cdn != '':
+        if cdn == 'unknown':
+            build = build.filter(or_(Asset.dns.ilike('%' + cdn + '%'), Asset.dns.is_(None)))
+        else:
+            build = build.filter(Asset.dns.ilike('%' + cdn + '%'))
+    if port is not None and port != '':
+        build = build.filter(
+            or_(Asset.ports.ilike('%\'port\': \'' + port + '\'%'), Asset.ports.ilike('%\'name\': \'' + port + '\'%')))
+    return build.paginate(int(page), page_size)
+
+
+def list_all_asset(ip, region, port, tags):
+    build = Asset.query
     if ip is not None and ip != '':
         build = build.filter(Asset.ip.ilike('%' + ip + '%'))
     if region is not None and region != '':
@@ -34,27 +57,14 @@ def list_asset(page_size, page, ip, region, port, tags):
     if port is not None and port != '':
         build = build.filter(
             or_(Asset.ports.ilike('%\'port\': \'' + port + '\'%'), Asset.ports.ilike('%\'name\': \'' + port + '\'%')))
-    return build.paginate(int(page), page_size)
-
-
-def list_all_asset(ip, region, port):
-    build = Asset.query
-    if ip is not None and ip != '':
-        build = build.filter(Asset.ip.ilike('%' + ip + '%'))
-    if region is not None and region != '':
-        build = build.filter_by(region=region)
-    if port is not None and port != '':
-        build = build.filter(
-            or_(Asset.ports.ilike('%\'port\': \'' + port + '\'%'), Asset.ports.ilike('%\'name\': \'' + port + '\'%')))
     return build.all()
 
 
 def add_asset(ip, region, tags):
-    with lock:
-        if Asset.query.filter_by(ip=ip).first() is not None:
-            return
-        db.session.add(Asset(ip=ip, region=region, tags=tags, create_time=datetime.now(), modify_time=datetime.now()))
-        db.session.commit()
+    if Asset.query.filter_by(ip=ip).first() is not None:
+        return
+    db.session.add(Asset(ip=ip, region=region, tags=tags, create_time=datetime.now(), modify_time=datetime.now()))
+    db.session.commit()
 
 
 def del_asset(ip):
@@ -63,13 +73,75 @@ def del_asset(ip):
     db.session.commit()
 
 
+def del_assets(ip, region, tags, port):
+    build = Asset.query
+    if ip is not None and ip != '':
+        build = build.filter(Asset.ip.ilike('%' + ip + '%'))
+    if region is not None and region != '':
+        build = build.filter_by(region=region)
+    if tags is not None and tags != '':
+        build = build.filter(Asset.tags.ilike('%' + tags + '%'))
+    if port is not None and port != '':
+        build = build.filter(
+            or_(Asset.ports.ilike('%\'port\': \'' + port + '\'%'), Asset.ports.ilike('%\'name\': \'' + port + '\'%')))
+    build.delete(synchronize_session=False)
+    db.session.commit()
+
+
 def modify_asset_ports(ip, ports, app):
-    with lock:
-        with app.app_context():
+    with app.app_context():
+        with lock:
             asset = Asset.query.filter_by(ip=ip).first()
             asset.ports = str(ports)
             asset.modify_time = datetime.now()
             db.session.commit()
+            _get_web_abstract(ip, ports)
+
+
+def _get_web_abstract(ip, ports):
+    for port in ports:
+        state = port.get('state')
+        if state is None or state != 'open':
+            continue
+        service = port.get('service')
+        if service is None:
+            continue
+        name = service.get('name')
+        if name is None:
+            continue
+        if name in ['http', 'https', 'http-proxy', 'radan-http']:
+            title = __get_web_abstract(ip, port.get('port'))
+            if title is not None:
+                asset = Asset.query.filter_by(ip=ip).first()
+                asset.remark = str(title)
+                db.session.commit()
+                break
+
+
+def __get_web_abstract(ip, port):
+    try:
+        html = requests.get('http://%s:%s' % (ip, port), timeout=5).content.decode('utf-8')
+    except Exception as e:
+        print(e)
+        html = requests.get('http://%s:%s' % (ip, port), timeout=10).content.decode('utf-8')
+    if html is None:
+        return None
+    keywords = __re_meta('[kK]eywords', html)
+    desc = __re_meta('[dD]escription', html)
+    title = re.search('<title>.*</title>', html)
+    res = []
+    if title is not None:
+        res.append(title.group().strip('</title>'))
+
+    if desc is not None and desc.lastindex >= 1:
+        res.append(desc.group(1).strip('</meta>').strip('\'"'))
+    if keywords is not None and keywords.lastindex >= 1:
+        res.append(keywords.group(1).strip('</meta>').strip('\'"'))
+    return res
+
+
+def __re_meta(key, html):
+    return re.search("<meta\s+name=[\"']" + key + "[\"'].*?content=[\"']([\S\s]*?)[\"'].*?[\/]?>", html)
 
 
 def modify_asset_os(ip, os, app):
@@ -176,6 +248,30 @@ def del_task_by_id(id):
     db.session.commit()
 
 
+def del_task_by_query(target, state, result_state, handle_node):
+    build = Task.query
+    build = build.filter(Task.state.notin_([TaskState.RUNNING, TaskState.RUN_ABLE, TaskState.READY]))
+    if state is not None and state != '':
+        build = build.filter_by(state=state)
+    if handle_node is not None and handle_node != '':
+        build = build.filter_by(handle_node=handle_node)
+    if target is not None and target != '':
+        build = build.filter(Task.target.ilike('%' + target + '%'))
+    if result_state is not None and result_state != '':
+        build = build.filter_by(result_state=result_state)
+    build.delete(synchronize_session=False)
+    db.session.commit()
+
+
+def add_new_tasks(scripts, mode, hosts, cron=TaskCron.ONCE):
+    db.session.bulk_save_objects([
+            Task(task_name=str(uuid4()), script=Env.PLUGIN_SRC + script, script_name=script, target=host.get('ip') if mode == 0 else host.ip, state=TaskState.READY, cron=cron, create_time=datetime.now(), handle_state=HandleState.UNTREATED, modify_time=datetime.now())
+            for host in hosts
+                for script in scripts
+        ])
+    db.session.commit()
+
+
 def add_new_task(task_name, script, script_name, target, cron=TaskCron.ONCE):
     add_task(task_name=task_name, script=script, script_name=script_name, target=target, state=TaskState.READY,
              cron=cron)
@@ -237,6 +333,19 @@ def list_task(page_size, page, target, state, result_state, handle_node, random=
     return build.paginate(int(page), page_size)
 
 
+def list_all_task(target, state, result_state, handle_node):
+    build = Task.query
+    if state is not None and state != '':
+        build = build.filter_by(state=state)
+    if handle_node is not None and handle_node != '':
+        build = build.filter_by(handle_node=handle_node)
+    if target is not None and target != '':
+        build = build.filter(Task.target.ilike('%' + target + '%'))
+    if result_state is not None and result_state != '':
+        build = build.filter_by(result_state=result_state)
+    return build.all()
+
+
 def count_task_by_state(state):
     return Task.query.filter_by(state=state).count()
 
@@ -285,7 +394,8 @@ def check_running(app, interval=110):
     while True:
         try:
             with app.app_context():
-                tasks = list_task(page_size=50, page=1, target=None, state=TaskState.RUNNING, result_state=None, handle_node=None,
+                tasks = list_task(page_size=50, page=1, target=None, state=TaskState.RUNNING, result_state=None,
+                                  handle_node=None,
                                   random=True).items
                 _handle_check_running_list(tasks)
             time.sleep(interval)
@@ -306,7 +416,8 @@ def _handle_check_running(task):
         else:
             node = json.loads(node)
             if ((datetime.strptime(datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                                   '%Y-%m-%d %H:%M:%S').timestamp() - datetime.fromtimestamp(float(node.get('timespan')) / 1000).timestamp()) / 60) > Env.CHECK_TASK_ALIVE_SEC:
+                                   '%Y-%m-%d %H:%M:%S').timestamp() - datetime.fromtimestamp(
+                float(node.get('timespan')) / 1000).timestamp()) / 60) > Env.CHECK_TASK_ALIVE_SEC:
                 retry_task(task.id)
     except Exception as e:
         print(e)
@@ -316,7 +427,8 @@ def allot_task(app, interval=30):
     while True:
         try:
             with app.app_context():
-                tasks = list_task(page_size=1000, page=1, target=None, state=TaskState.READY, result_state=None, handle_node=None).items
+                tasks = list_task(page_size=1000, page=1, target=None, state=TaskState.READY, result_state=None,
+                                  handle_node=None).items
                 _handle_allot_list(tasks)
         except Exception as e:
             print(e)
@@ -523,3 +635,78 @@ def node_version():
         version = '1.5.1'
         rds.set('node_version', version)
     return version
+
+
+def modify_dns(ip, dns):
+    asset = Asset.query.filter_by(ip=ip).first()
+    if asset is None:
+        return False
+    asset.dns = dns
+    asset.modify_time = datetime.now()
+    db.session.commit()
+    return True
+
+
+def get_cdn(cname):
+    features = rds.get(CdnDefault.key)
+    if features is None:
+        features = CdnDefault.data
+        add_dict(CdnDefault.key, json.dumps({
+            'type': 'json',
+            'separate': '',
+            'info': json.dumps(features, ensure_ascii=False)
+        }), 'CDN特征库')
+    else:
+        features = json.loads(features)
+        features = eval(features.get('info'))
+
+    if isinstance(features, list):
+        for feature in features:
+            cname_list = feature.get('cname')
+            for cname_feature in cname_list:
+                if cname_feature in str(cname):
+                    return feature.get('name')
+    return 'unknown'
+
+
+def dig(domain, app):
+    try:
+        records = resolver.query(domain)
+    except Exception as e:
+        print(e)
+        records = resolver.query(domain)
+    if records is None:
+        return
+    name = records.rrset.name
+    try:
+        with app.app_context():
+            name = str(name)
+            cdn = 'unknown'
+            if name.find(domain) != 0:
+                cdn = get_cdn(name)
+            data = {
+                'cdn': cdn,
+                'name': name,
+                'records': []
+            }
+            for record in records:
+                data['records'].append({
+                    'target': str(record)
+                })
+            modify_dns(domain, json.dumps(data, ensure_ascii=False))
+    except Exception as e:
+        print(e)
+
+
+def scan_sub_domain(domain):
+    return sublist3r.main(domain, 100, None, ports=None, silent=False, verbose=False,
+                          enable_bruteforce=False,
+                          engines='baidu,yahoo,bing,ask,virustotal,threatcrowd,ssl,passivedns')
+
+
+def add_scan_job(domain, region, tags):
+    rds.rpush(Env.SUB_SCAN_TASK_QUEUE, json.dumps({'domain': domain, 'region': region, 'tags': str(tags)}))
+
+
+def get_scan_job():
+    return json.loads(rds.blpop(Env.SUB_SCAN_TASK_QUEUE)[1])
