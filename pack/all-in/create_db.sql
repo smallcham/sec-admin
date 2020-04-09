@@ -1,6 +1,6 @@
-create schema sec collate utf8_general_ci;
+create schema if not exists sec collate utf8_general_ci;
 use sec;
-create table asset
+create table if not exists asset
 (
     id          bigint auto_increment
         primary key,
@@ -13,7 +13,7 @@ create table asset
     modify_time datetime     null
 );
 
-create table dict
+create table if not exists dict
 (
     id          bigint auto_increment
         primary key,
@@ -24,7 +24,7 @@ create table dict
     modify_time datetime     null
 );
 
-create table plugin
+create table if not exists plugin
 (
     id          bigint auto_increment
         primary key,
@@ -38,7 +38,7 @@ create table plugin
     modify_time datetime         null
 );
 
-create table task
+create table if not exists task
 (
     id           bigint auto_increment
         primary key,
@@ -56,7 +56,7 @@ create table task
     modify_time  datetime     null
 );
 
-create table user
+create table if not exists user
 (
     id          bigint auto_increment
         primary key,
@@ -77,3 +77,23 @@ alter table sec.task convert to character set utf8;
 ALTER TABLE sec.asset DEFAULT CHARACTER SET utf8;
 ALTER TABLE sec.plugin DEFAULT CHARACTER SET utf8;
 ALTER TABLE sec.task DEFAULT CHARACTER SET utf8;
+
+-- 表变更记录
+DROP PROCEDURE IF EXISTS pro_AddColumn;
+CREATE PROCEDURE pro_AddColumn() BEGIN
+
+IF NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name='asset' AND COLUMN_NAME='remark') THEN
+alter table sec.asset add remark longtext null after os;
+END IF;
+
+IF NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name='asset' AND COLUMN_NAME='sub_domain') THEN
+alter table sec.asset add sub_domain longtext null after remark;
+END IF;
+
+IF NOT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name='asset' AND COLUMN_NAME='dns') THEN
+alter table sec.asset add dns longtext null after sub_domain;
+END IF;
+
+END;
+CALL pro_AddColumn;
+DROP PROCEDURE pro_AddColumn;

@@ -13,7 +13,7 @@ from src import mapper
 from src.model.entity import db
 
 db.init_app(flask_app)
-pool = ThreadPoolExecutor(15)
+pool = ThreadPoolExecutor(30)
 pool.submit(mapper.receive_result, flask_app, 2)
 pool.submit(mapper.allot_task, flask_app, 15)
 pool.submit(mapper.check_running, flask_app, 110)

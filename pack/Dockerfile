@@ -4,6 +4,11 @@ RUN echo "Asia/Shanghai" > /etc/timezone
 RUN apt-get -y update && apt-get -y install git python3 python3-pip curl nginx nmap libmysqlclient-dev
 
 WORKDIR /var/www/html/
+git clone https://github.com/aboul3la/Sublist3r.git
+WORKDIR /var/www/html/Sublist3r/
+RUN python3 setup.py install
+
+WORKDIR /var/www/html/
 LABEL version=0.5
 RUN git clone https://github.com/smallcham/sec-admin.git && \
 	git clone https://github.com/smallcham/sec-admin-web.git

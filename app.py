@@ -20,7 +20,7 @@ from src.model import result
 from src.model.entity import db
 
 db.init_app(flask_app)
-pool = ThreadPoolExecutor(15)
+pool = ThreadPoolExecutor(100)
 # pool.submit(mapper.receive_breath, flask_app)
 # pool.submit(mapper.receive_result, flask_app, 2)
 # pool.submit(mapper.allot_task, flask_app, 15)
@@ -47,7 +47,7 @@ def before_request():
 @flask_app.route('/query/ip', methods=['GET'])
 def query_ip():
     res = mapper.list_asset(page_size, request.args.get('next', 1), request.args.get('ip', ''),
-                            request.args.get('region', ''), request.args.get('port', ''), request.args.get('tags', ''))
+                            request.args.get('region', ''), request.args.get('port', ''), request.args.get('tags', ''), request.args.get('cdn', ''))
     return result.ok(__eval_page(res))
 
 
@@ -79,22 +79,36 @@ def __update_os(values):
         print(e)
 
 
-def __add_ip_and_tasks(ips, region, tags):
+def __add_ip_and_tasks(ips, region, tags, scan_sub_domain):
     for _ip in ips:
         try:
             for __ip in IP(_ip):
                 __add_ip_and_task(str(__ip), region, tags)
-        except Exception as e:
-            __add_ip_and_task(str(_ip), region, tags)
+        except Exception as _:
+            __add_ip_and_task(str(_ip), region, tags, True)
+            if scan_sub_domain:
+                mapper.add_scan_job(str(_ip), region, tags)
 
 
-def __add_ip_and_task(ip, region, tags):
-    mapper.add_asset(ip, region, str(tags))
-    param = [(ip, flask_app)]
+def __add_ip_and_task(ip, region, tags, dig=False, app=None):
+    if app is not None:
+        param = [(ip, app)]
+        _app = app
+    else:
+        param = [(ip, flask_app)]
+        _app = flask_app
+    with _app.app_context():
+        mapper.add_asset(ip, region, str(tags))
     ports_results = pool.map(__update_ports, param, timeout=timeout)
     os_results = pool.map(__update_os, param, timeout=timeout)
     pool.submit(__handle_result, ports_results, __update_ports, param)
     pool.submit(__handle_result, os_results, __update_os, param)
+    if dig:
+        pool.submit(__dig, ip, _app)
+
+
+def __dig(domain, app):
+    mapper.dig(domain, app)
 
 
 def __handle_result(results, fn, args):
@@ -134,19 +148,38 @@ def add_ip():
     for ip in ips:
         _ips = ip.strip().split('-')
         _size = len(_ips)
+        try:
+            IP(_ips[0])
+        except Exception as _:
+            _ips = [ip]
         if _size > 1 and '/' in ip:
             return result.fail(msg='can\'t eval "/" and "-" at the same time')
-        if len(_ips) > 1:
-            __add_ip_and_tasks(__eval_ip(_ips[0], _ips[1]), asset['region'], asset['tags'])
-        else:
-            __add_ip_and_tasks(_ips, asset['region'], asset['tags'])
+        pool.submit(_add_ip_in_thread, _ips, asset)
     return result.ok()
+
+
+def _add_ip_in_thread(_ips, asset):
+    try:
+        with flask_app.app_context():
+            if len(_ips) > 1:
+                __add_ip_and_tasks(__eval_ip(_ips[0], _ips[1]), asset['region'], asset['tags'], asset['scan_sub_domain'])
+            else:
+                __add_ip_and_tasks(_ips, asset['region'], asset['tags'], asset['scan_sub_domain'])
+    except Exception as e:
+        print(e)
 
 
 @flask_app.route('/del/ip', methods=['POST'])
 def del_ip():
     asset = json.loads(request.data)
     mapper.del_asset(asset['ip'])
+    return result.ok()
+
+
+@flask_app.route('/del/ips', methods=['POST'])
+def del_ip_by_query():
+    asset = json.loads(request.data)
+    mapper.del_assets(asset.get('ip', ''), asset.get('region', ''), asset.get('port', ''), asset.get('tags', ''))
     return result.ok()
 
 
@@ -227,14 +260,11 @@ def add_task():
     task = json.loads(request.data)
     mode = task.get('mode', 0)
     if mode == 1:
-        hosts = mapper.list_all_asset(task.get('ip', ''), task.get('region', ''), task.get('port', ''))
+        hosts = mapper.list_all_asset(task.get('ip', ''), task.get('region', ''), task.get('port', ''), task.get('tags', ''))
     else:
         hosts = task.get('ips')
     scripts = task.get('scripts')
-    for host in hosts:
-        for script in scripts:
-            ip = host.get('ip') if mode == 0 else host.ip
-            mapper.add_new_task(str(uuid.uuid4()), enum.Env.PLUGIN_SRC + script, script, ip)
+    mapper.add_new_tasks(scripts, mode, hosts)
     return result.ok()
 
 
@@ -249,6 +279,13 @@ def query_task():
 def del_task():
     task = json.loads(request.data)
     mapper.del_task_by_id(task.get('id', ''))
+    return result.ok()
+
+
+@flask_app.route('/del/tasks', methods=['POST'])
+def del_task_by_query():
+    task = json.loads(request.data)
+    mapper.del_task_by_query(task.get('target', ''), task.get('state', ''), task.get('result_state', ''), task.get('handle_node', ''))
     return result.ok()
 
 
@@ -270,6 +307,15 @@ def retry_task():
 def cancel_task():
     task = json.loads(request.data)
     mapper.cancel_task(task.get('task_name'), task.get('handle_node'), task.get('state'))
+    return result.ok()
+
+
+@flask_app.route('/cancel/tasks', methods=['POST'])
+def cancel_tasks():
+    task = json.loads(request.data)
+    items = mapper.list_all_task(task.get('target', ''), task.get('state', ''), task.get('result_state', ''), task.get('handle_node', ''))
+    for item in items:
+        mapper.cancel_task(item.task_name, item.handle_node, item.state)
     return result.ok()
 
 
