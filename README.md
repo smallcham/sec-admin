@@ -116,7 +116,7 @@ wget https://raw.githubusercontent.com/smallcham/sec-admin/master/pack/create_db
 docker exec -i sec-mysql sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < /你下载的目录/create_db.sql
 ```
 
-> 如果你要使用自己现有的数据库可以直接将[create_db.sql](https://github.com/smallcham/sec-admin/blob/master/pack/create_db.sql)中的SQL执行进行初始化,，注意：如果你从老版本SEC升级安装到新版，也请务必再次执行SQL
+> 如果你要使用自己现有的数据库可以直接将[create_db.sql](https://github.com/smallcham/sec-admin/blob/master/pack/create_db.sql)中的SQL执行进行初始化，注意：如果你从老版本SEC升级安装到新版，也请务必再次执行SQL
 
 4. 使用容器启动Redis
 
