@@ -11,6 +11,26 @@
 [![](https://smallcham.github.io/static/img/sec-demo.png)](https://smallcham.github.io/static/video/sec-demo.mp4)
 
 ----------
+
+## 版本更新
+#### 最初版:
+* 目标端口服务发现
+* 目标系统识别
+* 漏洞扫描
+* 用户管理
+* 自定义扫描插件
+* 字典
+
+#### 2.0：
+* 子域名识别自动添加扫描任务
+* DNS获取、CDN厂商识别（可在字典追加特征记录）
+* 对暴露Web服务目标进行网页标题以及关键字抓取
+* 支持对任务的批量处理操作、对结果集操作
+* 支持对资产的批量处理操作、对结果集操作
+* 优化删除任务速度
+
+----------
+
 ## 系统组成介绍
 
 SEC共分为三个项目
@@ -53,7 +73,7 @@ sudo service docker start
 3. 启动SEC服务(**指令中8793是后台访问端口， 可根据需求修改为其他端口，NODE_COUNT 为执行节点启动的进程数，默认为3**)
 
 ```
-docker run -d -p 8793:80 --name sec --env NODE_COUNT=3 smallcham/sec:all-in-0.1 && docker logs -f sec --tail 10
+docker run -d -p 8793:80 --name sec --env NODE_COUNT=3 smallcham/sec:all-in-0.2 && docker logs -f sec --tail 10
 ```
 
 4. 服务启动后初始用户为：root， 初始密码将会打印在控制台，可在登录后修改。
@@ -90,11 +110,13 @@ wget https://raw.githubusercontent.com/smallcham/sec-admin/master/pack/create_db
 
 等待半分钟，mysql启动完毕后执行
 
+> 注意：如果你从老版本SEC升级安装到新版，也请务必再次执行SQL
+
 ```
 docker exec -i sec-mysql sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < /你下载的目录/create_db.sql
 ```
 
-> 如果你要使用自己现有的数据库可以直接将[create_db.sql](https://github.com/smallcham/sec-admin/blob/master/pack/create_db.sql)中的SQL执行进行初始化
+> 如果你要使用自己现有的数据库可以直接将[create_db.sql](https://github.com/smallcham/sec-admin/blob/master/pack/create_db.sql)中的SQL执行进行初始化,，注意：如果你从老版本SEC升级安装到新版，也请务必再次执行SQL
 
 4. 使用容器启动Redis
 
@@ -113,7 +135,7 @@ docker run -d -p 启动端口:80 --name sec --env HOST=http://部署机器的IP:
 > 例如
 
 ```
-docker run -d -p 8793:80 --name sec --env HOST=http://192.168.0.107:8793 --env DB_URL=root:abcd1234@192.168.0.107:3306/sec --env RDS_URL=0:abcd1234@192.168.0.107:6379 -v ~/sec-script:/var/www/html/sec-admin/static/plugin/usr smallcham/sec:core-0.1 && docker logs -f sec --tail 10
+docker run -d -p 8793:80 --name sec --env HOST=http://192.168.0.107:8793 --env DB_URL=root:abcd1234@192.168.0.107:3306/sec --env RDS_URL=0:abcd1234@192.168.0.107:6379 -v ~/sec-script:/var/www/html/sec-admin/static/plugin/usr smallcham/sec:core-0.2 && docker logs -f sec --tail 10
 ```
 
 
@@ -138,6 +160,8 @@ docker run -d -p 8793:80 --name sec --env HOST=http://192.168.0.107:8793 --env D
  * git clone https://github.com/smallcham/sec-admin.git
  * cd 你的项目路径/sec-admin/
  * pip install -r requirements.txt // 找不到pip的尝试 pip3 install -r requirements.txt
+ * git clone https://github.com/aboul3la/Sublist3r
+ * python setup.py install //进入Sublist3r目录执行
  * 打开项目路径下的 src/model/enum.py 修改Env类 默认LOCAL判断内的数据库以及Redis配置为你安装的配置
  * nohup gunicorn -w 10 app:flask_app
 ```
@@ -172,7 +196,7 @@ server {
 配置好后记得重启nginx服务
 5. 启动执行节点
 ```
-* git clone https://github.com/davytitan/sec-scannode.git
+* git clone https://github.com/wanzywang/sec-scannode.git
 * cd 你的项目路径/sec-scannode/
 * pip install -r requirements.txt // 找不到pip的尝试 pip3 install -r requirements.txt
 * 打开项目根目录的 config.py 修改redis配置为你安装的ip以及密码

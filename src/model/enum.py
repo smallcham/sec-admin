@@ -44,7 +44,7 @@ class CdnDefault:
     data = [
         {"cname": ["yunjiasu-cdn.net"], "name": "百度云"},
         {'cname': ['cdntip.com', 'cdn.dnsv1.com'], 'name': '腾讯云'},
-        {'cname': ['aliyuncs.com', 'aliyun-inc.com', 'alikunlun.com', 'alibabadns.com', '.aliyun.com'], 'name': '阿里云'},
+        {'cname': ['aliyuncs.com', 'aliyun-inc.com', 'alikunlun.com', 'alibabadns.com', '.aliyun.com', 'cdngslb.com', 'tbcache.com', 'alipaydns.com', 'kunlunar.com'], 'name': '阿里云'},
         {'cname': ['telefonica.com.'], 'name': 'Telefonica'},
         {'cname': ['presscdn.com'], 'name': 'Presscdn'},
         {'cname': ['anankecdn.com.br.'], 'name': 'Ananke'},
@@ -80,7 +80,6 @@ class CdnDefault:
 
 class Env:
     env = environ.get('ENV', 'LOCAL')
-
     if env == 'LOCAL':
         DB_URL = 'mysql+pymysql://' + environ.get('DB_URL', 'root:secpassword@localhost:3306/sec')  # eg: user:pass@ip:port/db
         RDS_URL = environ.get('RDS_URL', '0:secpassword@localhost:6379')  # eg: pass@ip:port/db

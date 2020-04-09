@@ -13,7 +13,7 @@ from src import mapper
 from src.model.entity import db
 from app import __add_ip_and_task
 db.init_app(flask_app)
-pool = ThreadPoolExecutor(30)
+pool = ThreadPoolExecutor(5)
 
 
 def __add_sub_domain_with_tasks(ip, region, tags):
