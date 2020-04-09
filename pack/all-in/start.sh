@@ -22,7 +22,7 @@ nohup redis-server &
 echo -e "\n\n\033[33m waiting mysql start... \033[0m\n\n"
 service mysql restart
 echo -e "\n\n\033[33m waiting db init... \033[0m\n\n"
-mysql -uroot < /var/www/html/sec-admin/pack/create_db.sql
+mysql -uroot < /var/www/html/sec-admin/pack/all-in/create_db.sql
 cd /var/www/html/sec-scannode/
 pip3 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 echo -e "\n\n\033[33m starting task node... \033[0m\n\n"
