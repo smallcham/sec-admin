@@ -29,4 +29,5 @@ else
   sh ./init_pwd.sh
 fi
 echo -e "\033[32m Service started . \033[0m"
-python3 -u task.py
+nohup python3 -u task.py &
+python3 -u subscan.py
