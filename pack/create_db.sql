@@ -8,6 +8,9 @@ create table if not exists `asset`
     `region`      varchar(64)  null,
     `ports`       longtext     null,
     `os`          longtext     null,
+    `remark`      longtext     null,
+    `sub_domain`  longtext     null,
+    `dns`         longtext     null,
     `create_time` datetime     null,
     `modify_time` datetime     null
 );
@@ -80,6 +83,7 @@ ALTER TABLE sec.task
     DEFAULT CHARACTER SET utf8;
 
 DROP PROCEDURE IF EXISTS pro_AddColumn;
+DELIMITER //
 CREATE PROCEDURE pro_AddColumn()
 BEGIN
 
@@ -99,6 +103,7 @@ BEGIN
             add dns longtext null after sub_domain;
     END IF;
 
-END;
+END//
+DELIMITER ;
 CALL pro_AddColumn;
 DROP PROCEDURE pro_AddColumn;
