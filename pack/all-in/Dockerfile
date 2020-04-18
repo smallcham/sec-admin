@@ -10,7 +10,7 @@ WORKDIR /var/www/html/Sublist3r/
 RUN python3 setup.py install
 
 WORKDIR /var/www/html/
-LABEL version=2.5
+LABEL version=2.6
 RUN git clone https://github.com/smallcham/sec-admin.git && \
 	git clone https://github.com/smallcham/sec-admin-web.git && \
 	git clone https://github.com/wanzywang/sec-scannode.git
