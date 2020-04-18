@@ -18,7 +18,8 @@ ln -s /var/www/html/sec-admin-web/dist /var/www/html/dist
 mv /var/www/html/sec-admin/static/plugin/_usr/* /var/www/html/sec-admin/static/plugin/usr/
 echo -e "\n\n\033[33m waiting redis start... \033[0m\n\n"
 nohup redis-server &
-
+rm -rf /var/run/mysqld/mysqld.sock
+rm -rf /var/run/mysqld/mysqld.sock.lock
 echo -e "\n\n\033[33m waiting mysql start... \033[0m\n\n"
 service mysql restart
 echo -e "\n\n\033[33m waiting db init... \033[0m\n\n"
