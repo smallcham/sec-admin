@@ -61,9 +61,9 @@ sudo apt-get -y install docker.io
 ```
 
 CentOS: 
-```
-sudo yum -y install docker.io
-```
+
+> [请根据docker官方文档步骤进行安装] (https://docs.docker.com/engine/install/centos/)
+
 2. 启动Docker服务（**已经安装Docker服务并启动的直接调到第 3 步**）
 
 ```
