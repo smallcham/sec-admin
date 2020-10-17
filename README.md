@@ -70,7 +70,7 @@ CentOS:
 sudo service docker start
 ```
 
-3. 启动SEC服务(**指令中8793是后台访问端口， 可根据需求修改为其他端口，NODE_COUNT 为执行节点启动的进程数，默认为3**)
+3. 启动SEC服务(**指令中8000是后台访问端口， 可根据需求修改为其他端口，NODE_COUNT 为执行节点启动的进程数，默认为3**)
 
 ```
 docker run -d -p 8000:80 --name sec --env NODE_COUNT=3 smallcham/sec:all-in-0.3 && docker logs -f sec --tail 10
