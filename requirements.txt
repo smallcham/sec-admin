@@ -17,7 +17,7 @@ idna==2.9
 imagesize==1.2.0
 IPy==1.0
 itsdangerous==1.1.0
-Jinja2==2.11.1
+Jinja2==2.11.3
 MarkupSafe==1.1.1
 mysqlclient==1.4.6
 packaging==20.3
