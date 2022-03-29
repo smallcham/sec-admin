@@ -21,7 +21,7 @@ Jinja2==2.11.1
 MarkupSafe==1.1.1
 mysqlclient==1.4.6
 packaging==20.3
-paramiko==2.7.1
+paramiko==2.10.1
 pika==1.1.0
 pycparser==2.20
 Pygments==2.6.1
